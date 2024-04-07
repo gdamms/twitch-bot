@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://github.com/tmijs/tmi.js/releases/download/v1.8.5/tmi.min.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <img src="/assets/levelup.gif" style="image-rendering: pixelated;"></img>
+    <audio src="/assets/levelup.wav"></audio>
+</body>
+
+<script>
+    // Define the delay between level ups
+    const levelUpDelay = 10000;
+    let lastLevelUp = Date.now();
+
+    // Play the level up animation and sound
+    function playLevelUp() {
+        const imgElement = document.getElementsByTagName('img')[0];
+        const audioElement = document.getElementsByTagName('audio')[0];
+        imgElement.src = '/assets/levelup.gif';
+        audioElement.play();
+    }
+
+    // Called every time a message comes in
+    function onMessageHandler(target, context, msg, self) {
+        // If "gg" is found in the message, play the level up animation
+        if (msg.toLowerCase().includes('gg')) {
+            let now = Date.now();
+            if (now - lastLevelUp > levelUpDelay) {
+                lastLevelUp = now;
+                playLevelUp();
+            }
+        }
+    }
+
+    // Called every time the bot connects to Twitch chat
+    function onConnectedHandler(addr, port) {
+        console.log(`* Connected to ${addr}:${port}`);
+    }
+
+    // Main function
+    async function run() {
+        // Fetch credentials from server
+        const username = await fetch('/username.cred').then(response => response.text());
+        const password = await fetch('/password.cred').then(response => response.text());
+
+        // Define configuration options
+        const opts = {
+            identity: {
+                username: username,
+                password: password,
+            },
+            channels: [
+                username,
+            ]
+        };
+
+        // Create a client with our options
+        const client = new tmi.client(opts);
+
+        // Register our event handlers
+        client.on('message', onMessageHandler);
+        client.on('connected', onConnectedHandler);
+
+        // Connect to Twitch
+        client.connect();
+    }
+
+    run();
+</script>
+
+</html>
